@@ -1,0 +1,2 @@
+[functions.college-api]
+verify_jwt = false

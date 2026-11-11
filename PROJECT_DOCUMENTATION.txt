@@ -1,0 +1,282 @@
+# Sufia Motin Mohila College - Academic Management System
+## Project Documentation
+
+## Project Overview
+This is a React + TypeScript + Vite web application for Sufia Motin Mohila College, Baniachong, Habiganj, Sylhet, Bangladesh. It's an academic management system for a women's college offering HSC, Degree, Honours, and Masters programs.
+
+## Tech Stack
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS
+- **Backend/Database**: Neon PostgreSQL (serverless) via `@neondatabase/serverless`
+- **Routing**: React Router DOM v7
+- **Charts/Export**: jsPDF + jspdf-autotable (for PDF export of results)
+- **Icons**: Lucide React
+- **Date Handling**: date-fns
+- **CSV Parsing**: Built-in CSV parsing for bulk student upload
+
+## Key Features
+
+### 1. Public Pages
+- **Home**: Hero section, stats, features, programs, notices
+- **Notices**: Filterable notice board with categories (admission, exam, result, holiday, general)
+- **Teachers**: Faculty directory with search and filter
+- **Students**: Student directory with search, filter by program (HSC/Degree/Honours)
+
+### 2. Authentication System
+- **Teacher Login**: Teacher ID + Password
+- **Student Login**: Class Roll + Mobile Number (password) + Program selection (HSC/Degree/Honours)
+- **Principal Login**: Special teacher with `is_principal=true` flag
+
+**How a session works** (see `server/lib/tokens.js`):
+1. Sign-in returns a signed, expiring token (HMAC-SHA256, 12 hours).
+2. The browser keeps that token in `sessionStorage` and sends it as
+   `Authorization: Bearer <token>` on every request. The password is never
+   persisted and is not resent after sign-in.
+3. The server re-reads the account on each request, so deleting a teacher or
+   changing their role takes effect immediately rather than at token expiry.
+
+The token is signed with `SESSION_SECRET`. Changing that secret invalidates
+all outstanding sessions.
+
+**Passwords** (see `server/lib/passwords.js`) are stored as scrypt hashes.
+Rows created before hashing existed are upgraded automatically the next time
+that account signs in successfully, so no bulk migration was required.
+Consequence: a password cannot be looked up — a forgotten one must be reset.
+
+### 3. Principal Dashboard (Admin Panel)
+**Tabs:**
+- **Overview**: Stats cards, quick actions, active exams
+- **Create Teacher**: Add new teacher accounts
+- **Manage Teachers**: List, search, edit, delete, toggle notice access, reset password
+- **Create Student**: Single student creation
+- **Manage Students**: List, search, filter by session/program, **bulk CSV upload** (50/page pagination)
+- **Manage Notices**: Create/delete notices with categories
+- **Manage Exams**: Create exams, add subjects, set pass marks, activate/deactivate, view results
+
+### 4. Teacher Portal
+- **Teacher Profile**: Edit personal info, education, job details
+- **Teacher Students**: View students by subject with pagination
+- **Teacher Exam Results**: Enter/edit marks (CQ/MCQ), mark absent/expelled, view results
+
+### 5. Student Portal
+- **Student Profile**: View/edit academic info (SSC, HSC, Degree details)
+- **Subjects auto-organized**: Mandatory (Bangla, English, ICT) + Group-specific subjects
+
+### 6. Exam Result System
+- **Exam Creation**: Principal creates exams with subjects, pass marks
+- **Mark Entry**: Teachers enter CQ/MCQ marks, mark Absent/Expelled
+- **Result Calculation**: 
+  - 4th subject bonus (marks > 40 add to total)
+  - Rank calculation (1st/2nd/3rd per group)
+  - Fail/Absent/Expelled handling
+- **Result Display**: Tabbed by group (Humanities/Science/Business)
+- **Print/PDF Export**: Professional result sheets with college branding
+- **PDF Export**: Legal-size landscape, group-wise, college header on each page
+
+## Database Schema (Neon PostgreSQL)
+
+### Tables:
+1. **teachers**: teacher_id (PK), password, full_name, fathers_name, mothers_name, dob, mobile_number, email, addresses, nid_number, joining_date, appointment_date, designation, subject, mpo_date, index_number, salary_grade, basic_scale, training_names, education fields, tmis_no, ttis_no, profile_pic_url, is_principal, can_write_notice
+2. **students**: student_id (PK), class_roll, password, full_name, fathers_name, mothers_name, ssc_gpa, ssc_group, ssc_passing_year, ssc_board, ssc_roll, ssc_regi, ssc_institute, hsc_group, hsc_board, hsc_gpa, hsc_passing_year, hsc_roll, hsc_regi, hsc_institute, hsc_subjects (JSON), fourth_subject, mobile_number, present_address, permanent_address, password, session, program, department, subjects (JSON), created_at, updated_at
+3. **notices**: id, title, content, category, class, author, published_date
+4. **exams**: id, name, program, session, subjects (text[]), is_active, created_by, pass_marks (JSONB), created_at, updated_at
+5. **exam_marks**: id, exam_id (FK), student_id, subject, cq, mcq, status (present/absent/expelled), entered_by, created_at, updated_at, UNIQUE(exam_id, student_id, subject)
+
+## Recent Fixes Applied (October 2026)
+
+### 1. 4th Subject Column Bug Fix (CRITICAL)
+**Problem**: 4th subject column showed "Failed", "Absent", "Expelled" instead of proper bonus/N/A
+**Root Cause**: Table rendering used `viewingExamResult.subjects` order instead of `tabSubjects` (GROUP_SUBJECTS order)
+**Fix**: 
+- Updated `GROUP_SUBJECTS` constant to have English, Bangla, ICT as first 3 subjects for all groups
+- Fixed table rendering to use `tabSubjects` (GROUP_SUBJECTS order) instead of `viewingExamResult.subjects`
+- Fixed 4th subject column rendering logic with proper `renderStudentStatus` helper
+- Fixed malformed JSX in 4th subject column (duplicate renderStudentStatus call)
+
+### 2. Subject Ordering Standardization
+**New Order (All Groups)**: English, Bangla, ICT (first 3 mandatory)
+- **Humanities**: English, Bangla, ICT, Civics, Sociology, Islamic History, Logic, Economics, Islamic Studies (4th)
+- **Science**: English, Bangla, ICT, Physics, Chemistry, Biology, Higher Math (4th)
+- **Business**: English, Bangla, ICT, Accounting, Business Org, Production Mgmt, Economics (4th)
+
+### 3. Rank/Status Display Improvements
+- Short labels: "Failed (1)", "Absent (1)", "Expelled (1)"
+- Combined statuses: "Failed (1), Absent (1)" when multiple
+- Only show rank (1st/2nd/3rd) if no failures/absences/expulsions
+
+### 3. Horizontal Scrollbar Fix
+- **Problem**: Scrollbar only at bottom of table
+- **Fix**: Parent container `overflow-y-auto overflow-x-scroll`, inner container no overflow-x
+- Added CSS for `.overflow-x-scroll` class with custom scrollbar styling
+
+### 4. Bulk Student Delete Optimization
+- **Before**: Sequential individual DELETE queries
+- **After**: Single `DELETE FROM students WHERE student_id = ANY($1)` query
+- Added `/api/students/bulk-delete` endpoint
+
+### 5. Group Filter in Manage Students
+- Added "Group" filter dropdown (Humanities/Science/Business Studies)
+- Only shows for HSC program
+
+### 5. Phone Number Display
+- Added phone number column in Manage Students table
+
+### 6. Student Deletion Cascade
+- **Before**: Only deleted student record
+- **After**: Cascade deletes exam_marks first, then student
+
+### 7. Success Message Duration
+- Extended from 6s to 10s for CSV upload success messages
+
+### 7. PDF/Print Export Improvements
+- Subject order matches GROUP_SUBJECTS
+- 4th subject column properly highlighted (yellow)
+- Mandatory subjects (English, Bangla, ICT) always first
+- 4th subject logic: only bonus (>40) added to total
+
+## File Structure
+```
+src/
+├── components/
+│   ├── DashboardShell.tsx      # Principal dashboard layout
+│   ├── Footer.tsx
+│   ├── Navbar.tsx
+│   ├── PageHeader.tsx
+│   ├── SaveToast.tsx
+│   ├── ScrollToTop.tsx
+│   ├── TeacherExamResults.tsx  # Teacher mark entry
+│   ├── TeacherStudentsDirectory.tsx
+├── lib/
+│   ├── api.ts                  # All API calls (Neon DB)
+│   ├── auth.tsx                # Auth context (sessionStorage)
+│   ├── resultExport.ts         # Print/PDF export logic
+│   ├── subjects.ts             # Subject constants (GROUP_SUBJECTS, etc.)
+│   └── useSEO.ts               # SEO meta tags
+├── pages/
+│   ├── Home.tsx
+│   ├── Login.tsx
+│   ├── Notices.tsx
+│   ├── NotFound.tsx
+│   ├── PrincipalDashboard.tsx  # Main admin panel
+│   ├── StudentProfile.tsx
+│   ├── Students.tsx
+│   ├── TeacherProfile.tsx
+│   ├── TeacherStudents.tsx
+│   └── Teachers.tsx
+├── App.tsx
+├── main.tsx
+└── index.css
+```
+
+## Running the Project
+```bash
+# Development — recommended: starts both, reuses what is already running,
+# and keeps the API alive (without the API on 3001 every /api call 500s)
+npm run dev:all
+
+# Or start them separately:
+npm run dev        # Frontend (port 5173) + Vite proxy to API (3001)
+cd server && node index.js  # Backend API (port 3001)
+
+# Build
+npm run build
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+```
+
+## Environment Variables (.env)
+```
+# Project root .env, and/or server/.env (the server reads either)
+NEON_CONNECTION_STRING=postgresql://user:pass@host/db?sslmode=require
+
+# server/.env only — both are server-side secrets, never VITE_-prefixed
+SESSION_SECRET=<64 hex characters>          # signs session tokens
+ALLOWED_ORIGINS=https://example.edu.bd,http://localhost:5173
+```
+
+Never give this variable a `VITE_` prefix. Vite inlines `VITE_*` values into
+the client bundle, which would publish the database password to every visitor.
+The migration scripts read the same variable; they no longer contain a
+hardcoded credential.
+
+## Key Implementation Details
+
+### Subject Ordering Logic
+The `GROUP_SUBJECTS` constant in `src/pages/PrincipalDashboard.tsx` defines the canonical subject order per group. This is used by:
+- View Result table (`tabSubjects`)
+- Print Preview (`buildExportGroups`)
+- PDF Export (`buildExportGroups` in resultExport.ts)
+- Subject filtering in Manage Students
+
+### 4th Subject Logic
+- Defined by `effectiveFourthSubject()` in `src/lib/subjects.ts`
+- Science: Higher Math (mandatory)
+- Business Studies: Economics (mandatory)  
+- Humanities: Student choice from remaining subjects
+- Only bonus marks (>40) added to total
+
+### Rank Calculation
+In `buildExamResultRows()`:
+1. Calculate main total (excluding 4th subject)
+2. Add 4th subject bonus (marks > 40)
+3. Exclude students with failures/absences/expulsions from ranking
+- 1st, 2nd, 3rd per group
+- Ties broken by roll number
+
+### 4th Subject Logic
+- Stored in `fourth_subject` column
+- Effective subject determined by `effectiveFourthSubject()` 
+- Only bonus (>40) added to total
+- Highlighted in yellow in result tables
+
+## Recent Bug Fixes Summary (Oct 2026)
+
+| Issue | Status | Files Modified |
+|-------|--------|----------------|
+| 4th subject column showing wrong data | ✅ Fixed | PrincipalDashboard.tsx, resultExport.ts |
+| Subject ordering (English/Bangla/ICT first) | ✅ Fixed | PrincipalDashboard.tsx |
+| Rank column short labels + combined statuses | ✅ Fixed | PrincipalDashboard.tsx |
+| Horizontal scrollbar always visible | ✅ Fixed | PrincipalDashboard.tsx, resultExport.ts |
+| Bulk delete performance | ✅ Fixed | students.js (API) |
+| Student delete cascade to exam_marks | ✅ Fixed | students.js (API) |
+| Group filter in Manage Students | ✅ Fixed | PrincipalDashboard.tsx |
+| Phone number display | ✅ Fixed | PrincipalDashboard.tsx |
+| Print/PDF subject ordering | ✅ Fixed | resultExport.ts |
+| 4th subject column rendering bug | ✅ Fixed | PrincipalDashboard.tsx |
+| CSV upload success message duration | ✅ Fixed | PrincipalDashboard.tsx |
+
+## Deployment Notes
+- Frontend: Deploy to Vercel/Netlify (static)
+- Backend: Deploy to Railway/Render/Heroku (Node.js)
+- Database: Neon PostgreSQL (serverless)
+- Set environment variables in deployment platform
+- CORS is an allowlist, not a wildcard: set `ALLOWED_ORIGINS` (comma-separated)
+  in the deployment environment, or the built-in defaults apply
+- Set `SESSION_SECRET` in the deployment environment (signs session tokens)
+- Behind a load balancer, set `app.set('trust proxy', 1)` in server/index.js so
+  the login throttle keys on the real client address
+
+## Known Issues / Future Improvements
+1. ~~Auth system stores passwords in plaintext~~ — fixed: scrypt hashes, with
+   legacy rows upgraded on next successful sign-in.
+2. ~~Direct browser-to-DB connection (security risk for production)~~ — fixed:
+   `src/lib/api.ts` is type-only and throws if used at runtime.
+3. No automated tests (the security fixes were verified with throwaway harnesses)
+4. No CI/CD pipeline
+5. No role-based access control beyond principal/teacher/student
+6. Student passwords are still their mobile number by design (known to
+   classmates); hashed at rest, but a weak credential
+7. Legacy credential paths (body and `x-auth-*` headers) are still accepted as a
+   transitional shim in `server/lib/security.js` — remove once nothing uses them
+8. Login errors still reveal whether an account exists (enumeration)
+
+## Contact / Maintainer Notes
+- Project initialized with Vite + React + TypeScript
+- Uses path aliases (@/ = src/)
+- ESLint + TypeScript strict mode enabled
+- Prettier formatting (implied)
+- No test suite currently

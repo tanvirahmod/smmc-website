@@ -1,0 +1,29 @@
+# Render Blueprint for the SMMC College Portal.
+#
+# One Web Service serves both the built SPA (dist/) and the Express API, so the
+# browser talks to /api on its own origin: no CORS allowlist, no VITE_API_BASE.
+#
+# The database is hosted Neon, so there is no database service here — only the
+# connection string. Set its value in the Render Dashboard when prompted; never
+# commit it.
+services:
+  - type: web
+    name: smmc-college-portal
+    runtime: node
+    plan: free
+    # Root dependencies build the SPA; the API has its own package.json.
+    buildCommand: npm install && npm install --prefix server && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.11.0
+      # Neon connection string (postgresql://...?sslmode=require). Set in the
+      # dashboard; `sync: false` keeps it out of this file.
+      - key: NEON_CONNECTION_STRING
+        sync: false
+      # Signs session tokens; changing it signs everyone out. Generated once
+      # by Render, so the value never passes through git.
+      - key: SESSION_SECRET
+        generateValue: true
