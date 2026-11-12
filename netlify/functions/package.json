@@ -1,0 +1,4 @@
+{
+  "//": "The project root is an ES module (\"type\": \"module\"), but the API in server/ is CommonJS. Marking this directory CommonJS lets esbuild bundle the function as CJS, where require('http') and friends keep working.",
+  "type": "commonjs"
+}
