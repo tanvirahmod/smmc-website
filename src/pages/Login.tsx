@@ -312,22 +312,6 @@ export default function Login() {
                 )}
               </button>
 
-              {/* Help Text */}
-              {role === 'teacher' && (
-                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
-                  <div className="flex items-start gap-3">
-                    <Shield size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-amber-800">
-                      <p className="font-medium mb-2">Demo Principal Login:</p>
-                      <div className="flex flex-col gap-1 text-sm font-mono bg-amber-100 rounded-lg p-2">
-                        <code>ID: principal</code>
-                        <code>Password: principal123</code>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {role === 'student' && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
                   <div className="flex items-start gap-3">
