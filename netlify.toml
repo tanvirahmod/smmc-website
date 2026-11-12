@@ -1,0 +1,33 @@
+# Netlify hosts the API as a serverless function (and can also serve the built
+# SPA). No server runs between requests, so nothing "sleeps" for a minute.
+#
+# The static frontend can stay on Render; point its VITE_API_BASE at
+# https://<this-site>.netlify.app/api at build time.
+
+[build]
+  # Root dependencies build the SPA; the API has its own package.json, and its
+  # node_modules must exist before Netlify bundles netlify/functions/api.js.
+  command = "npm install --prefix server && npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  # Bundle Express and its dependencies into one function file.
+  node_bundler = "esbuild"
+
+# The browser calls /api/... exactly as it does in development; Netlify routes
+# those requests into the function instead of the static assets.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# Client-side routing: serve the SPA shell for any non-file path.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
