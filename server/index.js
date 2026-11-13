@@ -8,9 +8,13 @@
  * function (netlify/functions/api.js).
  */
 
-require('dotenv').config();
-
 const path = require('node:path');
+
+// Load the project-root .env, then server/.env (dotenv never overwrites a value
+// that is already set). Without the second call, `npm start` from the repo root
+// would miss SESSION_SECRET, which only lives in server/.env.
+require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { createApp } = require('./app');
 
 // The Vite dev server proxies /api to http://localhost:3001, so the API must

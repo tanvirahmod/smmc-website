@@ -198,11 +198,8 @@ router.get('/by-subject/:subject', async (req, res) => {
 // POST /api/students/bulk - bulk create students
 router.post('/bulk', async (req, res) => {
   try {
-    const { students, session, program, hscGroup, principalId, principalPassword } = req.body;
+    const { students, session, program, hscGroup } = req.body;
     
-    if (!principalId || !principalPassword) {
-      return res.status(401).json({ error: 'Principal credentials required' });
-    }
     
     // Verify principal
     const principal = await requirePrincipal(req, sql);
@@ -307,11 +304,8 @@ router.post('/bulk', async (req, res) => {
 // POST /api/students - create single student
 router.post('/', async (req, res) => {
   try {
-    const { class_roll, full_name, mobile_number, session, program, password, principalId, principalPassword } = req.body;
+    const { class_roll, full_name, mobile_number, session, program, password } = req.body;
     
-    if (!principalId || !principalPassword) {
-      return res.status(401).json({ error: 'Principal credentials required' });
-    }
     
     const principal = await requirePrincipal(req, sql);
     if (!principal) {
@@ -356,11 +350,6 @@ router.post('/', async (req, res) => {
 // DELETE /api/students/:id - delete student
 router.delete('/:id', async (req, res) => {
   try {
-    const { principalId, principalPassword } = req.body;
-    
-    if (!principalId || !principalPassword) {
-      return res.status(401).json({ error: 'Principal credentials required' });
-    }
     
     const principal = await requirePrincipal(req, sql);
     if (!principal) {
@@ -379,11 +368,8 @@ router.delete('/:id', async (req, res) => {
 // POST /api/students/bulk-delete - delete multiple students (principal only)
 router.post('/bulk-delete', async (req, res) => {
   try {
-    const { principalId, principalPassword, studentIds } = req.body;
+    const { studentIds } = req.body;
     
-    if (!principalId || !principalPassword) {
-      return res.status(401).json({ error: 'Principal credentials required' });
-    }
     
     if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
       return res.status(400).json({ error: 'Student IDs array required' });
