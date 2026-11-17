@@ -509,8 +509,8 @@ export default function TeacherExamResults() {
 
       {/* View: mark entry */}
       {view === 'entry' && selectedExam && (
-        <div className="card p-6 md:p-8">
-          <div className="flex flex-col-reverse sm:flex-row sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 mb-6">
+        <div className="card p-4 sm:p-6 md:p-8 max-lg:flex max-lg:flex-col">
+          <div className="flex flex-col-reverse sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-6">
             <button onClick={() => setView('summary')} className="btn-secondary w-full sm:w-auto">
               <ArrowLeft size={16} className="mr-1" />
               Back to Summary
@@ -520,9 +520,9 @@ export default function TeacherExamResults() {
             </span>
           </div>
 
-          <div className="max-w-lg mx-auto">
-            <div className="text-center mb-6">
-              <p className="text-sm text-gray-500">
+          <div className="max-w-lg mx-auto w-full max-lg:flex-1">
+            <div className="text-center mb-3 sm:mb-6">
+              <p className="text-xs sm:text-sm text-gray-500">
                 Student {currentIndex + 1} of {examStudents.length} | {enteredCount} completed | Subject: {subject}
               </p>
               <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -549,13 +549,17 @@ export default function TeacherExamResults() {
                   const current = examStudents[currentIndex];
                   if (!current) return null;
                   return (
-                    <div className="text-center mb-6 px-1">
-                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-600 to-green-800 text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <div className="text-center mb-3 sm:mb-6 px-1">
+                      {/* Decorative on desktop; hidden on phones to keep the form on one screen. */}
+                      <div className="hidden sm:flex w-20 h-20 rounded-2xl bg-gradient-to-br from-green-600 to-green-800 text-white items-center justify-center mx-auto mb-4 shadow-lg">
                         <GraduationCap size={36} />
                       </div>
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 break-words">{current.full_name || 'Profile not updated'}</h3>
-                      <p className="text-sm text-gray-500 mt-1">Roll: {rollOf(current)}</p>
-                      <p className="text-sm text-gray-500">Subject: {subject}</p>
+                      <h3 className="text-base sm:text-xl font-bold text-gray-900 break-words leading-tight">{current.full_name || 'Profile not updated'}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                        Roll: {rollOf(current)}
+                        <span className="mx-1.5 text-gray-300">·</span>
+                        Subject: {subject}
+                      </p>
                     </div>
                   );
                 })()}
@@ -571,7 +575,7 @@ export default function TeacherExamResults() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                <div className={`grid ${totalOnly ? 'grid-cols-1' : 'grid-cols-2'} gap-2.5 sm:gap-4 mb-3 sm:mb-4`}>
                   <div className="form-group">
                     <label className="label" htmlFor="cqMarks">{totalOnly ? 'Total Marks' : 'CQ Marks'}</label>
                     <input
@@ -606,9 +610,9 @@ export default function TeacherExamResults() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-6 p-3 sm:p-4 bg-gray-50 rounded-xl">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 sm:mb-6 p-2.5 sm:p-4 bg-gray-50 rounded-xl">
                   <span className="text-sm font-medium text-gray-600">Status:</span>
-                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer min-h-[44px]">
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer min-h-[40px] sm:min-h-[44px]">
                     <input
                       type="checkbox"
                       checked={markStatus === 'absent'}
@@ -618,7 +622,7 @@ export default function TeacherExamResults() {
                     />
                     Absent (A)
                   </label>
-                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer min-h-[44px]">
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer min-h-[40px] sm:min-h-[44px]">
                     <input
                       type="checkbox"
                       checked={markStatus === 'expelled'}
@@ -635,6 +639,9 @@ export default function TeacherExamResults() {
                   )}
                 </div>
 
+                {/* Action bar: on phones it sticks to the bottom of the screen,
+                    so the marks inputs and both buttons are always in view. */}
+                <div className="max-lg:sticky max-lg:bottom-0 max-lg:z-10 max-lg:-mx-4 max-lg:border-t max-lg:border-gray-100 max-lg:bg-white/95 max-lg:px-4 max-lg:pt-3 max-lg:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-lg:backdrop-blur">
                 {entryMode === 'single' ? (
                   <>
                     <button
@@ -696,6 +703,7 @@ export default function TeacherExamResults() {
                     </button>
                   );
                 })()}
+                </div>
               </>
             )}
           </div>
