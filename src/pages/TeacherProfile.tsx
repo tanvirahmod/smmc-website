@@ -3,7 +3,7 @@ import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import {
   Save, User, FileText, MapPin, Calendar, Award, BookOpen, Upload,
   Check, Phone, Mail, PenSquare, Trash2, AlertCircle, Users,
-  LayoutGrid, Bell, ClipboardList, BadgeCheck, Stamp, Scale, FlaskConical, Droplet, Moon,
+  LayoutGrid, Bell, ClipboardList, BadgeCheck, Stamp, Scale, FlaskConical, Droplet, Moon, GraduationCap,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { updateTeacher, fetchNotices, createTeacherNotice, deleteTeacherNotice, fetchActiveExams, fetchDepartmentStaff, Teacher, Notice, Exam, DepartmentStaff } from '@/lib/apiClient';
@@ -50,6 +50,8 @@ interface TeacherFieldConfig {
   icon: typeof User;
   type: 'text' | 'date' | 'email' | 'textarea' | 'select';
   options?: string[];
+  /** Locked for the teacher themselves; only the principal may change it. */
+  principalOnly?: boolean;
 }
 
 const PERSONAL_FIELDS: TeacherFieldConfig[] = [
@@ -73,7 +75,8 @@ const PERSONAL_FIELDS: TeacherFieldConfig[] = [
   { key: 'employment_type', label: 'Employment Type', icon: BadgeCheck, type: 'select', options: EMPLOYMENT_TYPES },
   { key: 'appointment_type', label: 'Appointment Type', icon: Stamp, type: 'select', options: APPOINTMENT_TYPES },
   { key: 'pending_lawsuits', label: 'Pending Lawsuits', icon: Scale, type: 'select', options: PENDING_LAWSUITS_OPTIONS },
-  { key: 'subject', label: 'Subject', icon: BookOpen, type: 'select', options: ALL_SUBJECTS },
+  { key: 'subject', label: 'Subject', icon: BookOpen, type: 'select', options: ALL_SUBJECTS, principalOnly: true },
+  { key: 'program', label: 'Program', icon: GraduationCap, type: 'select', options: ['HSC', 'Honours', 'Degree'] },
   { key: 'mpo_date', label: 'MPO Date', icon: Calendar, type: 'date' },
   { key: 'index_number', label: 'Index Number', icon: FileText, type: 'text' },
   { key: 'salary_grade', label: 'Salary Grade', icon: Award, type: 'text' },
@@ -415,6 +418,7 @@ export default function TeacherProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {PERSONAL_FIELDS.map((field) => {
                   const Icon = field.icon;
+                  const locked = !!field.principalOnly && !teacher.is_principal;
                   return (
                     <div key={field.key} className="form-group">
                       <label className="label flex items-center gap-1.5" htmlFor={field.key}>
@@ -428,6 +432,7 @@ export default function TeacherProfile() {
                             value={(form[field.key as keyof TeacherWithoutPassword] as string) || ''}
                             onChange={(e) => handleChange(field.key, e.target.value)}
                             className="select"
+                            disabled={locked}
                           >
                             <option value="" disabled>
                               Select {field.label.toLowerCase()}
@@ -458,6 +463,11 @@ export default function TeacherProfile() {
                           />
                         )}
                       </div>
+                      {locked && (
+                        <p className="text-xs text-gray-400 mt-1.5">
+                          Only the principal can change this
+                        </p>
+                      )}
                     </div>
                   );
                 })}

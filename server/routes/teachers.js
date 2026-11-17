@@ -177,9 +177,20 @@ router.put('/:id', async (req, res) => {
       if (!Object.prototype.hasOwnProperty.call(updates, k)) continue;
       const v = updates[k];
 
-      // A teacher may edit every field of their own record, subject included
-      // (a teacher used to be blocked here, which broke ordinary profile
-      // saves whenever the subject differed from the stored value).
+      // A teacher may edit every field of their own record except the one that
+      // decides which exam marks they may enter — otherwise they could grant
+      // themselves another subject's marks. The principal owns this field.
+      // Both sides are trimmed so re-sending the stored subject (or the same
+      // value with stray whitespace) never blocks an ordinary profile save.
+      if (
+        k === 'subject' &&
+        !caller.is_principal &&
+        String(v ?? '').trim() !== String(caller.subject ?? '').trim()
+      ) {
+        return res.status(403).json({
+          error: 'Only the principal can change your teaching subject. Please ask the principal.',
+        });
+      }
 
       // Passwords are stored hashed, and omission never clears one.
       if (k === 'password') {
