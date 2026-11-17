@@ -85,7 +85,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 grid-pattern relative py-12 px-4">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-gray-50 grid-pattern relative py-6 sm:py-10 md:py-12 px-3 sm:px-4">
       <div className="absolute -top-24 -left-24 w-96 h-96 glow-green rounded-full blur-3xl" aria-hidden="true" />
       <div className="absolute -bottom-24 -right-24 w-96 h-96 glow-amber rounded-full blur-3xl" aria-hidden="true" />
 
@@ -141,15 +141,17 @@ export default function Login() {
           </div>
 
           {/* Form panel */}
-          <div className="p-8 md:p-10">
-            <div className="text-center mb-8 md:hidden">
+          <div className="p-5 sm:p-8 md:p-10">
+            <div className="text-center mb-5 sm:mb-8 md:hidden">
               <img
                 src="/logo.png"
                 alt="Sufia Motin Mohila College crest"
-                className="w-14 h-14 rounded-2xl object-cover mx-auto mb-4 shadow-soft bg-white"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover mx-auto mb-3 sm:mb-4 shadow-soft bg-white"
               />
-              <h2 className="font-display text-2xl font-bold text-gray-900">Welcome Back</h2>
-              <p className="text-gray-500 text-sm mt-1">Sign in to your college portal</p>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-gray-900">Welcome Back</h2>
+              <p className="text-gray-500 text-xs sm:text-sm mt-1">
+                {role === 'teacher' ? 'Teacher & Principal Portal' : 'Student Portal'}
+              </p>
             </div>
 
             <div className="hidden md:block mb-8">
@@ -160,37 +162,38 @@ export default function Login() {
             </div>
 
             {/* Role Tabs */}
-            <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-xl" role="tablist">
+            <div className="flex gap-1.5 mb-5 sm:mb-6 p-1 bg-gray-100 rounded-xl" role="tablist">
               <button
                 role="tab"
                 aria-selected={role === 'teacher'}
                 onClick={() => { setRole('teacher'); setError(''); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
                   role === 'teacher'
                     ? 'bg-white text-green-800 shadow-soft'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                <User size={18} />
-                Teacher / Principal
+                <User size={16} className="flex-shrink-0" />
+                <span className="sm:hidden">Teacher</span>
+                <span className="hidden sm:inline">Teacher / Principal</span>
               </button>
               <button
                 role="tab"
                 aria-selected={role === 'student'}
                 onClick={() => { setRole('student'); setError(''); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
                   role === 'student'
                     ? 'bg-white text-green-800 shadow-soft'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                <GraduationCap size={18} />
+                <GraduationCap size={16} className="flex-shrink-0" />
                 Student
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
               {error && (
                 <div className="bg-red-50 border border-red-100 text-red-600 text-sm p-4 rounded-xl flex items-start gap-3 animate-slide-down" role="alert">
                   <Shield size={20} className="flex-shrink-0 mt-0.5" />
@@ -213,11 +216,10 @@ export default function Login() {
                     type="text"
                     value={loginId}
                     onChange={(e) => setLoginId(e.target.value)}
-                    placeholder={role === 'teacher' ? 'Enter your teacher ID (e.g. t001)' : 'Enter your class roll number'}
+                    placeholder={role === 'teacher' ? 'e.g. smmc1' : 'Enter your class roll number'}
                     className="input pl-12"
                     required
                     autoComplete="username"
-                    autoFocus
                   />
                 </div>
               </div>
@@ -294,7 +296,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary btn-lg w-full mt-2"
+                className="btn-primary btn-lg w-full mt-1 sm:mt-2"
               >
                 {loading ? (
                   <>
@@ -313,10 +315,10 @@ export default function Login() {
               </button>
 
               {role === 'student' && (
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                  <div className="flex items-start gap-3">
-                    <GraduationCap size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-800">
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 sm:p-4">
+                  <div className="flex items-start gap-2.5 sm:gap-3">
+                    <GraduationCap size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-[13px] sm:text-sm text-blue-800">
                       <p className="font-medium mb-1">Student Login Info:</p>
                       <p>Use your <strong>Class Roll Number</strong> as ID and your <strong>Mobile Number</strong> as password.</p>
                       <p className="mt-1">Select your program and session — the same roll number can exist in different sessions.</p>
@@ -326,7 +328,7 @@ export default function Login() {
               )}
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-6 md:hidden">
+            <p className="text-center text-xs sm:text-sm text-gray-500 mt-5 sm:mt-6 md:hidden">
               Need help?{' '}
               <a href="mailto:sufiamotinmohilacollege@gmail.com" className="text-green-700 hover:underline font-medium">
                 Contact Support
