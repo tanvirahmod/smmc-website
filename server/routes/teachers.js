@@ -177,14 +177,9 @@ router.put('/:id', async (req, res) => {
       if (!Object.prototype.hasOwnProperty.call(updates, k)) continue;
       const v = updates[k];
 
-      // A teacher may edit their own profile but not the field that decides
-      // which exam marks they may enter — otherwise they could grant
-      // themselves another subject's marks. The principal owns this field.
-      if (k === 'subject' && !caller.is_principal && String(v) !== String(caller.subject || '')) {
-        return res.status(403).json({
-          error: 'Only the principal can change your teaching subject. Please ask the principal.',
-        });
-      }
+      // A teacher may edit every field of their own record, subject included
+      // (a teacher used to be blocked here, which broke ordinary profile
+      // saves whenever the subject differed from the stored value).
 
       // Passwords are stored hashed, and omission never clears one.
       if (k === 'password') {
